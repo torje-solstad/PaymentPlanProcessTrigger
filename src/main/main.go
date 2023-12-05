@@ -22,24 +22,30 @@ import (
 )
 
 var (
-	connectionError       error            = nil
-	sess                  *session.Session = nil
-	DWH_CONSTR_DYNAMIC    string           = os.Getenv("DWH_CONSTR_DYNAMIC")
-	DWH_USERNAME          string           = os.Getenv("DWH_USERNAME")
-	DWH_PASSWORD          string           = os.Getenv("DWH_PASSWORD")
-	DWH_DB                string           = os.Getenv("DWH_DB")
-	BPE_ENDPOINT          string           = os.Getenv("BPE_ENDPOINT")
-	SNS_TOPIC_NAME        string           = os.Getenv("SNS_TOPIC_NAME")
-	BUCKET                string           = os.Getenv("BUCKET")
-	FILE_NAME             string           = os.Getenv("FILE_NAME")
-	INCLUDE_DAYS          string           = os.Getenv("INCLUDE_DAYS")
-	DUE_BY_NUMBER_OF_DAYS string           = os.Getenv("DUE_BY_NUMBER_OF_DAYS")
+	connectionError                            error            = nil
+	sess                                       *session.Session = nil
+	DWH_CONSTR_DYNAMIC                         string           = os.Getenv("DWH_CONSTR_DYNAMIC")
+	DWH_USERNAME                               string           = os.Getenv("DWH_USERNAME")
+	DWH_PASSWORD                               string           = os.Getenv("DWH_PASSWORD")
+	DWH_DB                                     string           = os.Getenv("DWH_DB")
+	BPE_ENDPOINT                               string           = os.Getenv("BPE_ENDPOINT")
+	SNS_TOPIC_NAME                             string           = os.Getenv("SNS_TOPIC_NAME")
+	BUCKET                                     string           = os.Getenv("BUCKET")
+	FILE_NAME                                  string           = os.Getenv("FILE_NAME")
+	INCLUDE_DAYS                               string           = os.Getenv("INCLUDE_DAYS")
+	DUE_BY_NUMBER_OF_DAYS                      string           = os.Getenv("DUE_BY_NUMBER_OF_DAYS")
+	FETCH_PAYMENTPLANS_WITHOUT_STARTINGPROCESS string           = os.Getenv("FETCH_PAYMENTPLANS_WITHOUT_STARTINGPROCESS")
 	// FROM               string                    = os.Getenv("FROM")
 	// TO                 string                    = os.Getenv("TO")
 	DB *sql.DB = nil
 )
 
 type InputData struct {
+}
+
+func evauluateAndExtractReadOnlyConfig() bool {
+	return strings.EqualFold(FETCH_PAYMENTPLANS_WITHOUT_STARTINGPROCESS, "true")
+
 }
 
 func uploadFile(data string) error {
@@ -294,7 +300,7 @@ func callEndPoint(b []byte) (string, error) {
 
 	to := formatDate(time.Now().AddDate(0, 0, 30))
 	fmt.Println(fmt.Sprintf("TO = %s", to))
-	url := BPE_ENDPOINT + fmt.Sprintf("from=%v&to=%v&partition=true&dataOnly=true&partitionIncludedRange=%s", from, to, INCLUDE_DAYS)
+	url := BPE_ENDPOINT + fmt.Sprintf("from=%v&to=%v&partition=true&dataOnly=%v&partitionIncludedRange=%s", from, to, evauluateAndExtractReadOnlyConfig(), INCLUDE_DAYS)
 	fmt.Println(fmt.Sprintf("URL IS = %s", url))
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
